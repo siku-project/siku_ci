@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  syntax:
+    name: syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Lua 5.4
+        run: sudo apt-get update && sudo apt-get install -y lua5.4
+
+      - name: Compile the shared scripts
+        run: |
+          set -euo pipefail
+          luac5.4 -p scripts/*.lua
+          for file in scripts/*.mjs; do node --check "$file"; done
+
+      - name: Parse every action file
+        run: python3 -c 'import sys, yaml; [yaml.safe_load(open(path)) for path in sys.argv[1:]]' actions/*/action.yml .github/workflows/ci.yml
+
+  guard:
+    name: guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./actions/branch-guard
