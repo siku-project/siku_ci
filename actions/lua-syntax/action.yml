@@ -1,0 +1,20 @@
+name: Lua syntax
+description: Compile every Lua file of the resource with Lua 5.4.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Lua 5.4
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y lua5.4
+
+    - name: Compile every Lua file
+      shell: bash
+      run: |
+        set -euo pipefail
+        count=0
+        while IFS= read -r -d '' file; do
+          luac5.4 -p "$file"
+          count=$((count + 1))
+        done < <(find . -name '*.lua' -not -path './.git/*' -print0)
+        echo "$count Lua file(s) compile"

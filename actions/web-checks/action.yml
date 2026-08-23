@@ -1,0 +1,53 @@
+name: Web checks
+description: Formatting, types, lints and build of the resource's NUI.
+
+inputs:
+  directory:
+    description: The web application directory.
+    required: false
+    default: web
+  locales:
+    description: Whether to check the parity between the Lua translations and the NUI mock locale.
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup bun
+      uses: oven-sh/setup-bun@v2
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: bun install --frozen-lockfile
+
+    - name: Locale parity
+      if: inputs.locales == 'true'
+      shell: bash
+      run: node "${{ github.action_path }}/../../scripts/check-locales.mjs"
+
+    - name: Formatting
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: bunx prettier --check src/
+
+    - name: Types
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: bunx vue-tsc --build --force
+
+    - name: Lint — oxlint
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: bunx oxlint .
+
+    - name: Lint — eslint
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: bunx eslint .
+
+    - name: Build
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: bunx vite build

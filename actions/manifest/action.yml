@@ -1,0 +1,13 @@
+name: Manifest coherence
+description: Check that fxmanifest.lua declares exactly the Lua files the repository tracks, without double loads.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Lua 5.4
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y lua5.4
+
+    - name: Check fxmanifest coherence
+      shell: bash
+      run: lua5.4 "${{ github.action_path }}/../../scripts/check-manifest.lua"

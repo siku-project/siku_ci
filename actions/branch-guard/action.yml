@@ -1,0 +1,33 @@
+name: Branch flow guard
+description: main only accepts pull requests coming from dev, and dev is never updated from main.
+
+runs:
+  using: composite
+  steps:
+    - name: Only dev may open a pull request against main
+      shell: bash
+      env:
+        EVENT: ${{ github.event_name }}
+        BASE: ${{ github.base_ref }}
+        HEAD: ${{ github.head_ref }}
+      run: |
+        set -euo pipefail
+
+        if [ "$EVENT" != "pull_request" ]; then
+          echo "Not a pull request, nothing to guard."
+          exit 0
+        fi
+
+        echo "Pull request: $HEAD -> $BASE"
+
+        if [ "$BASE" = "main" ] && [ "$HEAD" != "dev" ]; then
+          echo "::error::main only accepts pull requests coming from dev. Retarget this pull request to dev."
+          exit 1
+        fi
+
+        if [ "$BASE" = "dev" ] && [ "$HEAD" = "main" ]; then
+          echo "::error::dev must not be updated from main. Work flows dev -> main, never the other way."
+          exit 1
+        fi
+
+        echo "Branch flow is valid."
