@@ -10,7 +10,7 @@ et les scripts vivent ici, une correction se fait une fois et vaut partout.
 | --- | --- |
 | `siku-project/siku_ci/actions/lua-syntax@v1` | Compile chaque fichier Lua de la ressource avec Lua 5.4. |
 | `siku-project/siku_ci/actions/manifest@v1` | Vérifie que `fxmanifest.lua` déclare exactement les fichiers Lua suivis, sans double chargement. |
-| `siku-project/siku_ci/actions/web-checks@v1` | Formatage, types, lints et build de la NUI (`directory`, défaut `web` ; `locales: 'true'` active la parité translations Lua ↔ mock NUI). |
+| `siku-project/siku_ci/actions/web-checks@v1` | Formatage, types, lints et build de la NUI (`directory`, défaut `web` ; `locales: 'true'` active la parité translations Lua ↔ mock NUI ; `framework`, `vue` par défaut ou `svelte`, choisit le vérificateur de types : `vue-tsc` ou `svelte-check`). |
 | `siku-project/siku_ci/actions/branch-guard@v1` | `main` n'accepte que les pull requests venant de `dev`, et `dev` n'est jamais mis à jour depuis `main`. |
 
 ## Utilisation
@@ -61,9 +61,12 @@ jobs:
       - uses: siku-project/siku_ci/actions/branch-guard@v1
 ```
 
-Le job `web` ne s'ajoute que dans les ressources qui ont une NUI. Les noms de
-jobs (`syntax`, `manifest`, `web`, `guard`) sont ceux qu'exigent les
-protections de branches : ne pas les renommer.
+Le job `web` ne s'ajoute que dans les ressources qui ont une NUI. Une NUI
+Svelte passe `framework: svelte` à l'action ; le projet fournit alors
+`svelte-check`, `prettier-plugin-svelte` et `eslint-plugin-svelte`, les
+commandes `prettier`, `oxlint`, `eslint` et `vite build` restant les mêmes.
+Les noms de jobs (`syntax`, `manifest`, `web`, `guard`) sont ceux qu'exigent
+les protections de branches : ne pas les renommer.
 
 ## Versionnement
 

@@ -10,10 +10,21 @@ inputs:
     description: Whether to check the parity between the Lua translations and the NUI mock locale.
     required: false
     default: 'false'
+  framework:
+    description: The NUI framework, which decides the type checker. `vue` runs vue-tsc, `svelte` runs svelte-check.
+    required: false
+    default: vue
 
 runs:
   using: composite
   steps:
+    - name: Check the framework input
+      if: inputs.framework != 'vue' && inputs.framework != 'svelte'
+      shell: bash
+      run: |
+        echo "Unknown framework '${{ inputs.framework }}': expected 'vue' or 'svelte'." >&2
+        exit 1
+
     - name: Setup bun
       uses: oven-sh/setup-bun@v2
 
@@ -32,10 +43,17 @@ runs:
       working-directory: ${{ inputs.directory }}
       run: bunx prettier --check src/
 
-    - name: Types
+    - name: Types (Vue)
+      if: inputs.framework == 'vue'
       shell: bash
       working-directory: ${{ inputs.directory }}
       run: bunx vue-tsc --build --force
+
+    - name: Types (Svelte)
+      if: inputs.framework == 'svelte'
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: bunx svelte-check --tsconfig ./tsconfig.app.json --fail-on-warnings
 
     - name: Lint — oxlint
       shell: bash
